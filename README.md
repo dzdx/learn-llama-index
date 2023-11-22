@@ -90,8 +90,7 @@ source venv/bin/activate
 pip install requirements.txt
 ```
 
-3.
-准备一部分数据集，作为我们可供查询的数据，这边从维基百科下载了中国几个城市的介绍数据，执行下载操作 `python download_wiki.py`
+3. 准备一部分数据集，作为我们可供查询的数据，这边从维基百科下载了中国几个城市的介绍数据，执行下载操作 `python download_wiki.py`
 
 ```python
 from pathlib import Path
