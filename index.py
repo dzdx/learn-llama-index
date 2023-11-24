@@ -29,18 +29,22 @@ def build_index(index_dir: str, documents: List[Document], service_context: Serv
     return [vector_index]
 
 
-def load_or_build_city_indices(service_context: ServiceContext):
+def load_or_build_city_index(service_context: ServiceContext, file) -> List[BaseIndex]:
+    index_file = os.path.join(index_dir, file)
+    if os.path.exists(index_file):
+        indices = load_index(index_file, service_context)
+    else:
+        documents = SimpleDirectoryReader(input_files=[os.path.join(data_dir, file)]).load_data()
+        for doc in documents:
+            doc.excluded_llm_metadata_keys.append("file_path")
+            doc.excluded_embed_metadata_keys.append("file_path")
+        indices = build_index(index_file, documents)
+    return indices
+
+
+def load_or_build_cities_indices(service_context: ServiceContext) -> Dict[str, List[BaseIndex]]:
     city_indices: Dict[str, List[BaseIndex]] = {}
     for file in os.listdir(data_dir):
         basename = os.path.splitext(file)[0]
-        index_file = os.path.join(index_dir, file)
-        if os.path.exists(index_file):
-            indices = load_index(index_file, service_context)
-        else:
-            documents = SimpleDirectoryReader(input_files=[os.path.join(data_dir, file)]).load_data()
-            for doc in documents:
-                doc.excluded_llm_metadata_keys.append("file_path")
-                doc.excluded_embed_metadata_keys.append("file_path")
-            indices = build_index(index_file, documents)
-        city_indices[basename] = indices
+        city_indices[basename] = load_or_build_city_index(service_context, file)
     return city_indices

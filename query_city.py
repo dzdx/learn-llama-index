@@ -12,7 +12,7 @@ from llama_index.prompts import PromptType
 from llama_index.query_engine import RetrieverQueryEngine
 from llama_index.response_synthesizers import ResponseMode
 
-from index import load_or_build_city_indices
+from index import load_or_build_cities_indices
 from llm import llm_gpt3
 from prompt import CH_TEXT_QA_PROMPT_TMPL, CH_QUERY_PROMPT, CH_CHOICE_SELECT_PROMPT, CH_TREE_SUMMARIZE_PROMPT
 from retrievers import CustomRetriever
@@ -33,7 +33,7 @@ service_context = ServiceContext.from_defaults(
     llm=llm_gpt3, chunk_size=1024, callback_manager=cb_manager,
 )
 
-city_indices = load_or_build_city_indices(service_context)
+city_indices = load_or_build_cities_indices(service_context)
 
 
 @dataclass
