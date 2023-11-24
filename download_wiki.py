@@ -1,6 +1,8 @@
 from pathlib import Path
 import requests
 
+from config import ROOT_PATH
+
 wiki_titles = ["北京市", "上海市", "杭州市", "广州市", "南京市"]
 
 for title in wiki_titles:
@@ -17,7 +19,7 @@ for title in wiki_titles:
     page = next(iter(response['query']['pages'].values()))
     wiki_text = page['extract']
 
-    data_path = Path('data')
+    data_path = Path(ROOT_PATH) / Path('data')
     if not data_path.exists():
         Path.mkdir(data_path)
 
