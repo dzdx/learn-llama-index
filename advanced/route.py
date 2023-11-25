@@ -9,7 +9,7 @@ from llama_index.tools import QueryEngineTool
 
 from llm import llm_predict
 from prompt import CH_SINGLE_SELECT_PROMPT_TMPL
-from query_city import query_engine, city_indices, cb_manager, debug_handler, service_context
+from query import query_engine, city_indices, cb_manager, debug_handler, service_context
 from utils import ObjectEncoder
 
 query_tool_city = QueryEngineTool.from_defaults(
@@ -54,14 +54,3 @@ def route_query(query):
                     f"[DebugInfo] event_type={event.event_type}, content={json.dumps(event.payload, ensure_ascii=False, cls=ObjectEncoder)}")
             debug_handler.flush_event_logs()
     return response
-
-
-def chat_loop():
-    while True:
-        query = input("\nEnter a query:")
-        if query == "exit":
-            break
-        if query.strip() == "":
-            continue
-        ans = route_query(query)
-        print(ans)

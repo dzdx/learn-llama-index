@@ -5,32 +5,22 @@ from typing import List
 
 from llama_index import ServiceContext, ComposableGraph, \
     get_response_synthesizer, Prompt, TreeIndex
-from llama_index.callbacks import CallbackManager, LlamaDebugHandler, CBEventType
+from llama_index.callbacks import CBEventType
 from llama_index.indices.base import BaseIndex
 from llama_index.indices.postprocessor import LLMRerank
 from llama_index.prompts import PromptType
 from llama_index.query_engine import RetrieverQueryEngine
 from llama_index.response_synthesizers import ResponseMode
 
+from debug import cb_manager, debug_handler
 from index import load_or_build_cities_indices
-from llm import llm_gpt3
+from llm import llm
 from prompt import CH_TEXT_QA_PROMPT_TMPL, CH_QUERY_PROMPT, CH_CHOICE_SELECT_PROMPT, CH_TREE_SUMMARIZE_PROMPT
 from retrievers import CustomRetriever
 from utils import ObjectEncoder
 
-# os.environ['OPENAI_API_KEY'] = "xxxxxx"
-
-DEBUG = True
-
-if DEBUG:
-    debug_handler = LlamaDebugHandler()
-    cb_manager = CallbackManager([debug_handler])
-else:
-    debug_handler = None
-    cb_manager = CallbackManager()
-
 service_context = ServiceContext.from_defaults(
-    llm=llm_gpt3, chunk_size=1024, callback_manager=cb_manager,
+    llm=llm, chunk_size=1024, callback_manager=cb_manager,
 )
 
 city_indices = load_or_build_cities_indices(service_context)
