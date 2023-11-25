@@ -139,7 +139,7 @@ class CachedLLM(LLM):
 
 _llm_gpt3 = OpenAI(temperature=0, model="gpt-3.5-turbo", callback_manager=cb_manager, api_key=OPENAI_API_KEY)
 llm = CachedLLM(_llm_gpt3,
-                os.path.join(ROOT_PATH, '.llm_cache'),
+                '.llm_cache',
                 request_timeout=15,
                 enable_cache=LLM_CACHE_ENABLED)
 

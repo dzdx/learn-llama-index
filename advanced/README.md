@@ -44,7 +44,7 @@ for title in wiki_titles:
         fp.write(wiki_text)
 ```
 
-4. 首先我们对索引进行构建，按照每个城市一套所有的方式构建向量索引，这边简单期间直接使用本地文件作为索引
+4. 首先我们对索引进行构建，按照每个城市一套所有的方式构建向量索引，这边简单起见直接使用本地文件作为索引
 
 ```python
 data_dir = os.path.join(ROOT_PATH, 'data')
