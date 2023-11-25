@@ -13,9 +13,10 @@ def chat_loop():
 
 
 if __name__ == '__main__':
+    route_query("北京气候如何")
     # for q in ["你好呀",
     #           "北京气候如何",
     #           "杭州在中国的位置"]:
     #     print(f"Question: {q}")
     #     print(f"Answer: {route_query(q)}")
-    chat_loop()
+    # chat_loop()
