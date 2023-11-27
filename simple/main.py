@@ -6,17 +6,16 @@ from llama_index import StorageContext, ServiceContext, load_indices_from_storag
 from llama_index.callbacks import CBEventType, LlamaDebugHandler, CallbackManager
 from llama_index.indices.base import BaseIndex
 from llama_index.indices.postprocessor import LLMRerank
-from llama_index.llms import OpenAI
 from llama_index.query_engine import RetrieverQueryEngine
 from llama_index.response_synthesizers import ResponseMode
 
-from common.config import ROOT_PATH, DEBUG, LLM_CACHE_ENABLED
-from common.llm import CachedLLM
+from common.config import ROOT_PATH
+from common.llm import create_llm
 from common.utils import ObjectEncoder
 
-index_dir = os.path.join(ROOT_PATH, 'simple/index')
-
+DEBUG = True
 OPENAI_API_KEY = None
+
 if DEBUG:
     debug_handler = LlamaDebugHandler()
     cb_manager = CallbackManager([debug_handler])
@@ -24,11 +23,7 @@ else:
     debug_handler = None
     cb_manager = CallbackManager()
 
-_llm_gpt3 = OpenAI(temperature=0, model="gpt-3.5-turbo", callback_manager=cb_manager, api_key=OPENAI_API_KEY)
-llm = CachedLLM(_llm_gpt3,
-                '.llm_cache',
-                request_timeout=15,
-                enable_cache=LLM_CACHE_ENABLED)
+llm = create_llm(cb_manager, False)
 
 service_context = ServiceContext.from_defaults(
     llm=llm,
@@ -39,10 +34,11 @@ service_context = ServiceContext.from_defaults(
 def load_index(index_file: str) -> List[BaseIndex]:
     storage_context = StorageContext.from_defaults(persist_dir=index_file)
     return load_indices_from_storage(
-        storage_context=storage_context, service_context=service_context
+        storage_context=storage_context
     )
 
 
+index_dir = os.path.join(ROOT_PATH, 'simple/index')
 index = load_index(os.path.join(index_dir, '北京市.txt'))[0]
 response_synthesizer = get_response_synthesizer(
     response_mode=ResponseMode.TREE_SUMMARIZE,
@@ -50,11 +46,11 @@ response_synthesizer = get_response_synthesizer(
 )
 
 node_postprocessors = [
-    LLMRerank(top_n=3, service_context=service_context)
+    LLMRerank(top_n=5, service_context=service_context, choice_batch_size=2)
 ]
 
 query_engine = RetrieverQueryEngine.from_args(
-    index.as_retriever(),
+    index.as_retriever(similarity_top_k=8),
     node_postprocessors=node_postprocessors,
     response_synthesizer=response_synthesizer,
     service_context=service_context,
@@ -73,4 +69,4 @@ def ask_question(query):
 
 
 if __name__ == '__main__':
-    print(ask_question("北京天气如何"))
+    print(ask_question("北京有哪些地方方言"))

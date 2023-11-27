@@ -1,4 +1,4 @@
-from route import route_query
+from route import chat
 
 
 def chat_loop():
@@ -8,16 +8,12 @@ def chat_loop():
             break
         if query.strip() == "":
             continue
-        ans = route_query(query)
+        ans = chat(query)
         print(ans)
 
 
 if __name__ == '__main__':
-    print(route_query("北京气候如何"))
-    print(route_query("杭州市在中国哪里"))
-    # for q in ["你好呀",
-    #           "北京气候如何",
-    #           "杭州在中国的位置"]:
-    #     print(f"Question: {q}")
-    #     print(f"Answer: {route_query(q)}")
+    print(chat("你好呀"))
+    print(chat("北京气候如何"))
+    print(chat("杭州市在中国哪里"))
     # chat_loop()

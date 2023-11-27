@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, Optional, Sequence
 
 from llama_index.bridge.pydantic import Field
+from llama_index.callbacks import CallbackManager
 from llama_index.llms import (
     ChatMessage,
     ChatResponse,
@@ -14,9 +15,11 @@ from llama_index.llms import (
     CompletionResponse,
     CompletionResponseAsyncGen,
     CompletionResponseGen,
-    LLMMetadata,
+    LLMMetadata, OpenAI,
 )
 from llama_index.llms.base import LLM
+
+from common.config import OPENAI_API_KEY, LLM_CACHE_ENABLED
 
 
 @dataclass
@@ -131,6 +134,14 @@ class CachedLLM(LLM):
             self, prompt: str, **kwargs: Any
     ) -> CompletionResponseAsyncGen:
         return await self.astream_complete(prompt, **kwargs)
+
+
+def create_llm(callback_manager: CallbackManager = None, enable_cache: bool = True):
+    _llm_gpt3 = OpenAI(temperature=0, model="gpt-3.5-turbo", callback_manager=callback_manager, api_key=OPENAI_API_KEY)
+    return CachedLLM(_llm_gpt3,
+                     '.llm_cache',
+                     request_timeout=15,
+                     enable_cache=enable_cache)
 
 
 def llm_predict(llm: LLM, content: str):

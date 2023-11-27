@@ -3,33 +3,42 @@ from dataclasses import dataclass
 from typing import List, Dict
 
 from llama_index import ServiceContext, ComposableGraph, \
-    get_response_synthesizer, Prompt, TreeIndex
+    get_response_synthesizer, Prompt, TreeIndex, VectorStoreIndex, DocumentSummaryIndex, KeywordTableIndex
 from llama_index.indices.base import BaseIndex
+from llama_index.indices.document_summary.base import DocumentSummaryRetrieverMode
 from llama_index.indices.postprocessor import LLMRerank
 from llama_index.indices.query.base import BaseQueryEngine
 from llama_index.prompts import PromptType
 from llama_index.query_engine import RetrieverQueryEngine
 from llama_index.response_synthesizers import ResponseMode
 
-from prompt import CH_TEXT_QA_PROMPT_TMPL, CH_QUERY_PROMPT, CH_CHOICE_SELECT_PROMPT, CH_TREE_SUMMARIZE_PROMPT
+from common.prompt import CH_TEXT_QA_PROMPT_TMPL, CH_QUERY_PROMPT, CH_CHOICE_SELECT_PROMPT, CH_TREE_SUMMARIZE_PROMPT
 from retrievers import CustomRetriever
 
 
 @dataclass
 class DocumentQueryEngine:
     indices: List[BaseIndex]
-    summary: str
+    summary: str = ""
 
     def first_index(self):
         return self.indices[0]
 
-    def create_query_engine(self, service_context: ServiceContext):
-        sub_retrievers = []
+    def _create_retrievers(self):
+        ret = []
         for index in self.indices:
-            sub_retrievers.append(index.as_retriever())
-        retriever = CustomRetriever(sub_retrievers)
+            if isinstance(index, VectorStoreIndex):
+                ret.append(index.as_retriever(similarity_top_k=5))
+            elif isinstance(index, DocumentSummaryIndex):
+                ret.append(index.as_retriever(retriever_mode=DocumentSummaryRetrieverMode.EMBEDDING))
+            elif isinstance(index, KeywordTableIndex):
+                ret.append(index.as_retriever())
+        return ret
+
+    def create_query_engine(self, service_context: ServiceContext) -> BaseQueryEngine:
+        retriever = CustomRetriever(self._create_retrievers())
         node_postprocessors = [
-            LLMRerank(top_n=3, choice_select_prompt=CH_CHOICE_SELECT_PROMPT, service_context=service_context)
+            LLMRerank(top_n=2, choice_select_prompt=CH_CHOICE_SELECT_PROMPT, service_context=service_context)
         ]
         return RetrieverQueryEngine.from_args(
             retriever, node_postprocessors=node_postprocessors,
