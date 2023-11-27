@@ -19,8 +19,8 @@ from llama_index.llms import (
 from llama_index.llms import OpenAI
 from llama_index.llms.base import LLM
 
-from config import ROOT_PATH, LLM_CACHE_ENABLED, OPENAI_API_KEY
-from debug import cb_manager
+from common.config import LLM_CACHE_ENABLED, OPENAI_API_KEY
+from common.debug import cb_manager
 
 
 @dataclass

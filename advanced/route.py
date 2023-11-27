@@ -7,10 +7,11 @@ from llama_index.query_engine.custom import STR_OR_RESPONSE_TYPE
 from llama_index.selectors import LLMSingleSelector
 from llama_index.tools import QueryEngineTool
 
-from llm import llm_predict
+from common.llm import llm_predict
 from prompt import CH_SINGLE_SELECT_PROMPT_TMPL
-from query import query_engine, city_indices, cb_manager, debug_handler, service_context
-from utils import ObjectEncoder
+from query import query_engine, city_indices, service_context
+from common.utils import ObjectEncoder
+from common.debug import debug_handler, cb_manager
 
 query_tool_city = QueryEngineTool.from_defaults(
     query_engine=query_engine,

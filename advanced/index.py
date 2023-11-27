@@ -1,48 +1,26 @@
 import os
 from typing import List, Dict
 
-from llama_index import Document, VectorStoreIndex, StorageContext, ServiceContext, \
-    load_indices_from_storage, SimpleDirectoryReader
+from llama_index import StorageContext, ServiceContext, \
+    load_indices_from_storage
 from llama_index.indices.base import BaseIndex
-from llama_index.schema import BaseNode
 
-from config import ROOT_PATH
+from common.config import ROOT_PATH
 
-data_dir = os.path.join(ROOT_PATH, 'data')
-index_dir = os.path.join(ROOT_PATH, 'index')
+data_dir = os.path.join(ROOT_PATH, 'advanced/data')
+index_dir = os.path.join(ROOT_PATH, 'advanced/index')
 
 
-def load_index(index_dir: str, service_context: ServiceContext = None) -> List[BaseIndex]:
-    storage_context = StorageContext.from_defaults(persist_dir=index_dir)
+def load_index(index_file: str, service_context: ServiceContext = None) -> List[BaseIndex]:
+    storage_context = StorageContext.from_defaults(persist_dir=index_file)
     return load_indices_from_storage(
         storage_context=storage_context, service_context=service_context
     )
 
 
-def build_index(index_dir: str, nodes: List[BaseNode], service_context: ServiceContext = None) -> List[BaseIndex]:
-    storage_context = StorageContext.from_defaults()
-    vector_index = VectorStoreIndex(nodes, service_context=service_context, storage_context=storage_context)
-    storage_context.persist(persist_dir=index_dir)
-    return [vector_index]
-
-
-def load_or_build_city_index(service_context: ServiceContext, file) -> List[BaseIndex]:
-    index_file = os.path.join(index_dir, file)
-    if os.path.exists(index_file):
-        indices = load_index(index_file, service_context)
-    else:
-        documents = SimpleDirectoryReader(input_files=[os.path.join(data_dir, file)]).load_data()
-        for doc in documents:
-            doc.excluded_llm_metadata_keys.append("file_path")
-            doc.excluded_embed_metadata_keys.append("file_path")
-        nodes = service_context.node_parser.get_nodes_from_documents(documents)
-        indices = build_index(index_file, nodes)
-    return indices
-
-
-def load_or_build_cities_indices(service_context: ServiceContext) -> Dict[str, List[BaseIndex]]:
-    city_indices: Dict[str, List[BaseIndex]] = {}
+def load_indices(service_context: ServiceContext) -> Dict[str, List[BaseIndex]]:
+    indices: Dict[str, List[BaseIndex]] = {}
     for file in os.listdir(data_dir):
         basename = os.path.splitext(file)[0]
-        city_indices[basename] = load_or_build_city_index(service_context, file)
-    return city_indices
+        indices[basename] = load_index(os.path.join(index_dir, file), service_context)
+    return indices

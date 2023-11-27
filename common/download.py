@@ -1,11 +1,11 @@
-from pathlib import Path
-import requests
+import os
 
-from config import ROOT_PATH
+import requests
 
 wiki_titles = ["北京市", "上海市", "杭州市", "广州市", "南京市"]
 
-for title in wiki_titles:
+
+def download(title: str, data_dir: str) -> str:
     response = requests.get(
         'https://zh.wikipedia.org/w/api.php',
         params={
@@ -19,9 +19,10 @@ for title in wiki_titles:
     page = next(iter(response['query']['pages'].values()))
     wiki_text = page['extract']
 
-    data_path = Path(ROOT_PATH) / Path('data')
-    if not data_path.exists():
-        Path.mkdir(data_path)
+    if not os.path.exists(data_dir):
+        os.makedirs(data_dir, exist_ok=True)
 
-    with open(data_path / f"{title}.txt", 'w') as fp:
+    file_path = os.path.join(data_dir, f"{title}.txt")
+    with open(file_path, 'w') as fp:
         fp.write(wiki_text)
+    return file_path

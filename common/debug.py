@@ -1,6 +1,6 @@
 from llama_index.callbacks import LlamaDebugHandler, CallbackManager
 
-from config import DEBUG
+from common.config import DEBUG
 
 if DEBUG:
     debug_handler = LlamaDebugHandler()

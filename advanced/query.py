@@ -1,11 +1,9 @@
 #! coding: utf-8
-import json
 from dataclasses import dataclass
 from typing import List
 
 from llama_index import ServiceContext, ComposableGraph, \
     get_response_synthesizer, Prompt, TreeIndex
-from llama_index.callbacks import CBEventType
 from llama_index.indices.base import BaseIndex
 from llama_index.indices.postprocessor import LLMRerank
 from llama_index.node_parser import SimpleNodeParser
@@ -14,12 +12,11 @@ from llama_index.query_engine import RetrieverQueryEngine
 from llama_index.response_synthesizers import ResponseMode
 from llama_index.text_splitter import SentenceSplitter
 
-from debug import cb_manager, debug_handler
-from index import load_or_build_cities_indices
-from llm import llm
+from common.debug import cb_manager
+from common.llm import llm
+from index import load_indices
 from prompt import CH_TEXT_QA_PROMPT_TMPL, CH_QUERY_PROMPT, CH_CHOICE_SELECT_PROMPT, CH_TREE_SUMMARIZE_PROMPT
 from retrievers import CustomRetriever
-from utils import ObjectEncoder
 
 service_context = ServiceContext.from_defaults(
     llm=llm,
@@ -31,7 +28,7 @@ service_context = ServiceContext.from_defaults(
     callback_manager=cb_manager
 )
 
-city_indices = load_or_build_cities_indices(service_context)
+city_indices = load_indices(service_context)
 
 
 @dataclass
@@ -92,13 +89,3 @@ query_engine = graph.as_query_engine(
     service_context=service_context,
     query_template=CH_QUERY_PROMPT,
 )
-
-
-def ask(query):
-    resp = query_engine.query(query)
-    if debug_handler:
-        for event in debug_handler.get_events():
-            if event.event_type in (CBEventType.LLM, CBEventType.RETRIEVE):
-                print(
-                    f"[DebugInfo] event_type={event.event_type}, content={json.dumps(event.payload, ensure_ascii=False, cls=ObjectEncoder)}")
-    return resp
