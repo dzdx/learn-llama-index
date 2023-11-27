@@ -8,9 +8,11 @@ from llama_index import ServiceContext, ComposableGraph, \
 from llama_index.callbacks import CBEventType
 from llama_index.indices.base import BaseIndex
 from llama_index.indices.postprocessor import LLMRerank
+from llama_index.node_parser import SimpleNodeParser
 from llama_index.prompts import PromptType
 from llama_index.query_engine import RetrieverQueryEngine
 from llama_index.response_synthesizers import ResponseMode
+from llama_index.text_splitter import SentenceSplitter
 
 from debug import cb_manager, debug_handler
 from index import load_or_build_cities_indices
@@ -20,7 +22,13 @@ from retrievers import CustomRetriever
 from utils import ObjectEncoder
 
 service_context = ServiceContext.from_defaults(
-    llm=llm, chunk_size=1024, callback_manager=cb_manager,
+    llm=llm,
+    node_parser=SimpleNodeParser.from_defaults(text_splitter=SentenceSplitter(
+        chunk_size=1024,
+        chunk_overlap=20,
+        callback_manager=cb_manager,
+    )),
+    callback_manager=cb_manager
 )
 
 city_indices = load_or_build_cities_indices(service_context)

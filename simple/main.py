@@ -2,12 +2,17 @@ import os
 from typing import List
 
 from llama_index import StorageContext, ServiceContext, load_indices_from_storage, SimpleDirectoryReader, \
-    VectorStoreIndex, Document, get_response_synthesizer
+    VectorStoreIndex, get_response_synthesizer
 from llama_index.indices.base import BaseIndex
 from llama_index.indices.postprocessor import LLMRerank
 from llama_index.llms import OpenAI
+from llama_index.node_parser import SimpleNodeParser
 from llama_index.query_engine import RetrieverQueryEngine
 from llama_index.response_synthesizers import ResponseMode
+from llama_index.schema import BaseNode
+from llama_index.text_splitter import SentenceSplitter
+
+from debug import cb_manager
 
 ROOT_PATH = os.path.dirname(__file__)
 data_dir = os.path.join(ROOT_PATH, 'data')
@@ -16,7 +21,12 @@ index_dir = os.path.join(ROOT_PATH, 'index')
 OPENAI_API_KEY = None
 llm = OpenAI(temperature=0, model="gpt-3.5-turbo", api_key=OPENAI_API_KEY)
 service_context = ServiceContext.from_defaults(
-    llm=llm, chunk_size=1024
+    llm=llm,
+    node_parser=SimpleNodeParser.from_defaults(text_splitter=SentenceSplitter(
+        chunk_size=1024,
+        chunk_overlap=20,
+        callback_manager=cb_manager,
+    )),
 )
 
 
@@ -27,13 +37,9 @@ def load_index(index_dir: str, service_context: ServiceContext = None) -> List[B
     )
 
 
-def build_index(index_dir: str, documents: List[Document], service_context: ServiceContext = None) -> List[BaseIndex]:
+def build_index(index_dir: str, nodes: List[BaseNode], service_context: ServiceContext = None) -> List[BaseIndex]:
     storage_context = StorageContext.from_defaults()
-    vector_index = VectorStoreIndex.from_documents(
-        documents,
-        service_context=service_context,
-        storage_context=storage_context,
-    )
+    vector_index = VectorStoreIndex(nodes, service_context=service_context, storage_context=storage_context)
     storage_context.persist(persist_dir=index_dir)
     return [vector_index]
 
@@ -47,7 +53,8 @@ def load_or_build_city_index(service_context: ServiceContext, file) -> List[Base
         for doc in documents:
             doc.excluded_llm_metadata_keys.append("file_path")
             doc.excluded_embed_metadata_keys.append("file_path")
-        indices = build_index(index_file, documents)
+        nodes = service_context.node_parser.get_nodes_from_documents(documents)
+        indices = build_index(index_file, nodes)
     return indices
 
 
@@ -68,4 +75,5 @@ query_engine = RetrieverQueryEngine.from_args(
     service_context=service_context,
 )
 
-print(query_engine.query("北京天气如何"))
+if __name__ == '__main__':
+    print(query_engine.query("北京天气如何"))
