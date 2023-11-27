@@ -29,6 +29,7 @@ def build_index(index_file: str, data_file: str) -> List[BaseIndex]:
         doc.excluded_embed_metadata_keys.append("file_path")
     nodes = service_context.node_parser.get_nodes_from_documents(documents)
     storage_context = StorageContext.from_defaults()
+    VectorStoreIndex.from_documents()
     index = VectorStoreIndex(nodes, service_context=service_context, storage_context=storage_context)
     storage_context.persist(persist_dir=index_file)
     return [index]

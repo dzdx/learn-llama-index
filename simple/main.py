@@ -3,20 +3,33 @@ import os
 from typing import List
 
 from llama_index import StorageContext, ServiceContext, load_indices_from_storage, get_response_synthesizer
-from llama_index.callbacks import CBEventType
+from llama_index.callbacks import CBEventType, LlamaDebugHandler, CallbackManager
 from llama_index.indices.base import BaseIndex
 from llama_index.indices.postprocessor import LLMRerank
+from llama_index.llms import OpenAI
 from llama_index.query_engine import RetrieverQueryEngine
 from llama_index.response_synthesizers import ResponseMode
 
-from common.config import ROOT_PATH
-from common.debug import cb_manager, debug_handler
-from common.llm import llm
+from common.config import ROOT_PATH, DEBUG, LLM_CACHE_ENABLED
+from common.llm import CachedLLM
 from common.utils import ObjectEncoder
 
 index_dir = os.path.join(ROOT_PATH, 'simple/index')
 
 OPENAI_API_KEY = None
+if DEBUG:
+    debug_handler = LlamaDebugHandler()
+    cb_manager = CallbackManager([debug_handler])
+else:
+    debug_handler = None
+    cb_manager = CallbackManager()
+
+_llm_gpt3 = OpenAI(temperature=0, model="gpt-3.5-turbo", callback_manager=cb_manager, api_key=OPENAI_API_KEY)
+llm = CachedLLM(_llm_gpt3,
+                '.llm_cache',
+                request_timeout=15,
+                enable_cache=LLM_CACHE_ENABLED)
+
 service_context = ServiceContext.from_defaults(
     llm=llm,
     callback_manager=cb_manager

@@ -16,11 +16,7 @@ from llama_index.llms import (
     CompletionResponseGen,
     LLMMetadata,
 )
-from llama_index.llms import OpenAI
 from llama_index.llms.base import LLM
-
-from common.config import LLM_CACHE_ENABLED, OPENAI_API_KEY
-from common.debug import cb_manager
 
 
 @dataclass
@@ -137,14 +133,7 @@ class CachedLLM(LLM):
         return await self.astream_complete(prompt, **kwargs)
 
 
-_llm_gpt3 = OpenAI(temperature=0, model="gpt-3.5-turbo", callback_manager=cb_manager, api_key=OPENAI_API_KEY)
-llm = CachedLLM(_llm_gpt3,
-                '.llm_cache',
-                request_timeout=15,
-                enable_cache=LLM_CACHE_ENABLED)
-
-
-def llm_predict(content: str):
+def llm_predict(llm: LLM, content: str):
     response = llm.chat([ChatMessage(
         content=content
     )])
