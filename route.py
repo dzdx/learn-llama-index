@@ -12,7 +12,7 @@ from llama_index.response.schema import RESPONSE_TYPE, Response
 from llama_index.selectors import LLMSingleSelector
 from llama_index.tools import QueryEngineTool
 
-from advanced.index import load_indices
+from index import load_indices
 from common.config import DEBUG, LLM_CACHE_ENABLED
 from common.llm import llm_predict, create_llm
 from common.prompt import CH_SINGLE_SELECT_PROMPT_TMPL

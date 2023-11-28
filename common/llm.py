@@ -3,7 +3,8 @@ import json
 import os.path
 import pickle
 from dataclasses import dataclass
-from typing import Any, Dict, Optional, Sequence
+from functools import wraps
+from typing import Any, Dict, Optional, Sequence, Tuple
 
 from llama_index.bridge.pydantic import Field
 from llama_index.callbacks import CallbackManager
@@ -19,35 +20,44 @@ from llama_index.llms import (
 )
 from llama_index.llms.base import LLM
 
-from common.config import OPENAI_API_KEY, LLM_CACHE_ENABLED
+from common.config import OPENAI_API_KEY, ROOT_PATH
+from common.utils import ObjectEncoder
 
 
 @dataclass
 class CacheRequest:
     func: str
-    messages: Optional[Sequence[ChatMessage]]
+    args: Optional[Tuple]
     kwargs: Optional[Dict]
 
-    def __init__(self, func, messages=None, kwargs=None):
+    def __init__(self, func, *args, **kwargs):
         self.func = func
-        self.messages = messages
+        self.args = args
         self.kwargs = kwargs
 
     def dump(self) -> bytes:
-        ret = {"func": self.func}
-        if self.messages:
-            ret["messages"] = [
-                {"role": str(m.role), "content": m.content} for m in self.messages
-            ]
-        if self.kwargs:
-            ret["kwargs"] = {k: pickle.dumps(v) for k, v in self.kwargs}
-        return json.dumps(ret).encode("utf-8")
+        return json.dumps(self, cls=ObjectEncoder, ensure_ascii=False).encode('utf-8')
 
 
 @dataclass
 class CacheItem:
     request: CacheRequest
     response: Optional[object]
+
+
+def cached_call(method):
+    @wraps(method)
+    def wrapper(self, *args, **kwargs):
+        cache_req = CacheRequest(method.__name__, *args, **kwargs)
+        if self.enable_cache:
+            cache_item = self._get_cache(cache_req)
+            if cache_item.response:
+                return cache_item.response
+        response = method(self, *args, **kwargs)
+        self._save_cache(cache_req, response)
+        return response
+
+    return wrapper
 
 
 class CachedLLM(LLM):
@@ -69,16 +79,12 @@ class CachedLLM(LLM):
     def metadata(self) -> LLMMetadata:
         return self.llm.metadata
 
-    def _create_cache_request(self, func: str, messages: Sequence[ChatMessage] = None,
-                              kwargs: Dict[str, Any] = None):
-        return CacheRequest(func=func, messages=messages, kwargs=kwargs)
-
     def _get_cache(
             self,
             req: CacheRequest,
     ) -> CacheItem:
         req_dump = req.dump()
-        md5 = hashlib.md5(req.dump()).hexdigest()
+        md5 = hashlib.md5(req_dump).hexdigest()
         cache_path = os.path.join(self.root_dir, md5)
         if os.path.exists(cache_path):
             with open(cache_path, "rb") as f:
@@ -86,7 +92,7 @@ class CachedLLM(LLM):
                 if cache_item.request.dump() == req_dump:
                     return cache_item
                 else:
-                    print("llm cache request hash conflict: %s", req)
+                    print("llm cache request hash conflict: %s != %s", req, cache_item.request)
         return CacheItem(req, None)
 
     def _save_cache(self, cache_request: CacheRequest, response: object):
@@ -95,19 +101,13 @@ class CachedLLM(LLM):
         with open(cache_path, "wb") as f:
             pickle.dump(CacheItem(cache_request, response), f)
 
+    @cached_call
     def chat(self, messages: Sequence[ChatMessage], **kwargs: Any) -> ChatResponse:
-        cache_req = self._create_cache_request("chat", messages=messages,
-                                               kwargs=kwargs)
-        if self.enable_cache:
-            cache_item = self._get_cache(cache_req)
-            if cache_item.response:
-                return cache_item.response
-        response = self.llm.chat(messages, request_timeout=self.request_timeout, timeout=self.request_timeout, **kwargs)
-        self._save_cache(cache_req, response)
-        return response
+        return self.llm.chat(messages, request_timeout=self.request_timeout, timeout=self.request_timeout, **kwargs)
 
+    @cached_call
     def complete(self, prompt: str, **kwargs: Any) -> CompletionResponse:
-        return self.llm.complete(prompt, **kwargs)
+        return self.llm.complete(prompt, request_timeout=self.request_timeout, timeout=self.request_timeout, **kwargs)
 
     def stream_chat(
             self, messages: Sequence[ChatMessage], **kwargs: Any
@@ -136,11 +136,11 @@ class CachedLLM(LLM):
         return await self.astream_complete(prompt, **kwargs)
 
 
-def create_llm(callback_manager: CallbackManager = None, enable_cache: bool = True):
+def create_llm(callback_manager: CallbackManager = None, enable_cache: bool = True, timeout=15):
     _llm_gpt3 = OpenAI(temperature=0, model="gpt-3.5-turbo", callback_manager=callback_manager, api_key=OPENAI_API_KEY)
     return CachedLLM(_llm_gpt3,
-                     '.llm_cache',
-                     request_timeout=15,
+                     os.path.join(ROOT_PATH, '.llm_cache'),
+                     request_timeout=timeout,
                      enable_cache=enable_cache)
 
 

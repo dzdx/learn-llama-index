@@ -7,8 +7,8 @@ from llama_index.indices.base import BaseIndex
 
 from common.config import ROOT_PATH
 
-data_dir = os.path.join(ROOT_PATH, 'advanced/data')
-index_dir = os.path.join(ROOT_PATH, 'advanced/index')
+data_dir = os.path.join(ROOT_PATH, 'data')
+index_dir = os.path.join(ROOT_PATH, 'index')
 
 
 def load_index(index_file: str) -> List[BaseIndex]:
@@ -20,7 +20,7 @@ def load_index(index_file: str) -> List[BaseIndex]:
 
 def load_indices() -> Dict[str, List[BaseIndex]]:
     indices: Dict[str, List[BaseIndex]] = {}
-    for file in os.listdir(data_dir):
+    for file in os.listdir(index_dir):
         basename = os.path.splitext(file)[0]
         indices[basename] = load_index(os.path.join(index_dir, file))
     return indices

@@ -2,6 +2,7 @@ from typing import List
 
 from llama_index import QueryBundle
 from llama_index.indices.base_retriever import BaseRetriever
+from llama_index.query_engine import RetrieverQueryEngine
 from llama_index.schema import NodeWithScore
 
 
@@ -44,7 +45,7 @@ class CustomRetriever(BaseRetriever):
             retrieve_ids = batch_option(node_ids, "intersection")
         else:
             retrieve_ids = batch_option(node_ids, "union")
-
+        retrieve_ids = sorted(retrieve_ids)
         retrieve_nodes = [combined_dict[rid] for rid in retrieve_ids]
         return retrieve_nodes
 
@@ -65,3 +66,11 @@ def batch_option(list_with_set, option_type):
         else:
             res = res.intersection(cur_set)
     return res
+
+
+class QueryEngineToRetriever(BaseRetriever):
+    def __init__(self, query_engine: RetrieverQueryEngine):
+        self._retriever = query_engine
+
+    def _retrieve(self, query_bundle: QueryBundle) -> List[NodeWithScore]:
+        return self._retriever.retrieve(query_bundle)

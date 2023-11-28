@@ -35,10 +35,14 @@ class DocumentQueryEngine:
                 ret.append(index.as_retriever())
         return ret
 
-    def create_query_engine(self, service_context: ServiceContext) -> BaseQueryEngine:
+    def doc_store(self):
+        return self.indices[0].docstore
+
+    def create_query_engine(self, service_context: ServiceContext) -> RetrieverQueryEngine:
         retriever = CustomRetriever(self._create_retrievers())
         node_postprocessors = [
-            LLMRerank(top_n=2, choice_select_prompt=CH_CHOICE_SELECT_PROMPT, service_context=service_context)
+            LLMRerank(top_n=4, choice_batch_size=2, choice_select_prompt=CH_CHOICE_SELECT_PROMPT,
+                      service_context=service_context)
         ]
         return RetrieverQueryEngine.from_args(
             retriever, node_postprocessors=node_postprocessors,
