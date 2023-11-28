@@ -42,12 +42,11 @@ def build_index(index_file: str, data_file: str):
                                     service_context=service_context,
                                     storage_context=storage_context,
                                     show_progress=True)
-    # tree_index = TreeIndex(nodes, num_children=5,
-    #                        service_context=service_context,
-    #                        storage_context=storage_context,
-    #                        summary_template=CH_SUMMARY_PROMPT,
-    #                        insert_prompt=CH_INSERT_PROMPT,
-    #                        show_progress=True)
+    tree_index = TreeIndex(nodes, num_children=8,
+                           service_context=service_context,
+                           storage_context=storage_context,
+                           summary_template=CH_SUMMARY_PROMPT,
+                           show_progress=True)
     storage_context.persist(persist_dir=index_file)
 
 
@@ -57,11 +56,7 @@ def download_and_build_index(title: str, data_dir: str, index_dir: str):
 
 
 def build_all():
-    if os.path.exists(data_dir):
-        shutil.rmtree(data_dir)
-    if os.path.exists(index_dir):
-        shutil.rmtree(index_dir)
-    titles = ['北京市', '上海市', '深圳市', '杭州市', '南京市']
+    titles = ['北京市', '上海市', '深圳市']
     for title in titles:
         download_and_build_index(title, data_dir, index_dir)
 

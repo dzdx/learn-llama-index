@@ -1,22 +1,23 @@
 #! coding=utf-8
 import os
-from typing import cast, List
+from typing import cast
 
-from llama_index import VectorStoreIndex, ServiceContext, QueryBundle
+from llama_index import VectorStoreIndex, ServiceContext, QueryBundle, TreeIndex
 from llama_index.indices.postprocessor import LLMRerank
 from llama_index.indices.vector_store import VectorIndexRetriever
 from llama_index.query_engine import ComposableGraphQueryEngine
 from llama_index.response_synthesizers import TreeSummarize
-from llama_index.schema import TextNode, NodeWithScore, BaseNode
+from llama_index.schema import TextNode, NodeWithScore
 
 from build.download import download
 from build.index import download_and_build_index, data_dir, index_dir, build_all, build_nodes
 from common.llm import create_llm
 from common.prompt import CH_TREE_SUMMARIZE_PROMPT
-from query import load_index, DocumentQueryEngineFactory, create_response_synthesizer, load_indices, \
-    create_compose_query_engine
-from retrievers import MultiRetriever
-from route import EchoNameEngine, create_route_query_engine, Chatter
+from common.utils import find_typed
+from query.compose import create_compose_query_engine
+from query.query_engine import load_index, DocumentQueryEngineFactory, create_response_synthesizer, load_indices
+from query.retrievers import MultiRetriever
+from query.route import EchoNameEngine, create_route_query_engine, Chatter
 
 test_llm = create_llm()
 
@@ -33,12 +34,13 @@ def test_build_index():
     index_file = os.path.join(index_dir, title)
     assert os.path.exists(os.path.join(data_dir, title))
     assert os.path.exists(index_file) and os.path.isdir(index_file)
-    assert any(idx for idx in load_index(title) if isinstance(idx, VectorStoreIndex))
+    assert find_typed(load_index(title), VectorStoreIndex) is not None
+    assert find_typed(load_index(title), TreeIndex) is not None
 
 
 def test_build_all_index():
     build_all()
-    titles = ['北京市', '上海市', '深圳市', '杭州市', '南京市']
+    titles = ['北京市', '上海市', '深圳市']
     all_index = os.listdir(index_dir)
     for title in titles:
         assert title in all_index
@@ -84,7 +86,7 @@ def test_query_engine():
     assert isinstance(query_engine._retriever, MultiRetriever)
     multi_retriever = cast(MultiRetriever, query_engine._retriever)
     assert len(multi_retriever._retrievers) > 0
-    assert any(p for p in query_engine._node_postprocessors if isinstance(p, LLMRerank))
+    assert find_typed(query_engine._node_postprocessors, LLMRerank) is not None
     query = "北京气候如何"
     nodes = query_engine.retrieve(QueryBundle(query_str=query))
     assert any(n for n in nodes if '平原地区平均年降水量约600毫米' in n.text)
@@ -92,13 +94,13 @@ def test_query_engine():
 
 
 def test_compose_query_engine():
-    city_indices = load_indices()
     service_context = ServiceContext.from_defaults(llm=create_llm())
+    city_indices = load_indices(service_context)
     query_engine = create_compose_query_engine(city_indices, service_context)
     compose_engine = cast(ComposableGraphQueryEngine, query_engine)
     assert len(compose_engine._custom_query_engines) == len(city_indices)
     beijing_response = compose_engine.query(QueryBundle(query_str="北京气候如何"))
-    hangzhou_response = compose_engine.query(QueryBundle(query_str="杭州气候如何"))
+    hangzhou_response = compose_engine.query(QueryBundle(query_str="深圳气候如何"))
     wuxi_response = compose_engine.query(QueryBundle(query_str="无锡气候如何"))
     print(beijing_response)
     print(hangzhou_response)
@@ -117,6 +119,6 @@ def test_simple_route():
 
 def test_route_query_engine():
     chatter = Chatter()
-    chatter.chat("你好呀")
-    chatter.chat("北京气候如何")
-    chatter.chat("杭州在中国什么位置")
+    print(chatter.chat("你好呀"))
+    print(chatter.chat("北京气候如何"))
+    print(chatter.chat("深圳在中国什么位置"))

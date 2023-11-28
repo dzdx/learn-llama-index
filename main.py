@@ -1,4 +1,4 @@
-from route import Chatter
+from query.route import Chatter
 
 
 def chat_loop():

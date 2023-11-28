@@ -2,8 +2,6 @@ import os
 
 import requests
 
-wiki_titles = ["北京市", "上海市", "杭州市", "广州市", "南京市"]
-
 
 def download(title: str, data_dir: str) -> str:
     response = requests.get(

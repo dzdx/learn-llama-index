@@ -13,25 +13,28 @@ from llama_index.query_engine import RetrieverQueryEngine
 from tqdm import tqdm
 
 from common.config import ROOT_PATH
-from query import load_indices
-from query import DocumentQueryEngineFactory
-from retrievers import QueryEngineToRetriever
+from query.query_engine import load_indices
+from query.query_engine import DocumentQueryEngineFactory
+from query.retrievers import QueryEngineToRetriever
 from common.llm import create_llm
 from common.prompt import CH_QA_GENERATE_PROMPT_TMPL
 
 QA_DATASET_DIR = os.path.join(ROOT_PATH, "qa_dataset")
 
-FORCE_REBUILD_DATASET = True
+FORCE_REBUILD_DATASET = False
+
+TEST_CITIES = ["上海市"]
 
 
 class Evaluator:
     def __init__(self, force_rebuild_dataset: bool = False):
         self.force_rebuild_dataset = force_rebuild_dataset
-        self.city_indices: Dict[str, List[BaseIndex]] = load_indices()
         self.llm = create_llm()
         self.service_context = ServiceContext.from_defaults(
             llm=self.llm
         )
+        indices = load_indices(self.service_context)
+        self.city_indices: List[Tuple[str, List[BaseIndex]]] = [(city, indices[city]) for city in TEST_CITIES]
 
     def _find_retrievers(self, retriever_query_engine: RetrieverQueryEngine) -> List[Tuple[str, BaseRetriever]]:
         name_to_retrievers = []
@@ -43,8 +46,7 @@ class Evaluator:
         name_to_retrievers.append(("query_engine", QueryEngineToRetriever(retriever_query_engine)))
         return name_to_retrievers
 
-    def generate_qa_dataset(self, city_name):
-        indices = self.city_indices[city_name]
+    def generate_qa_dataset(self, name: str, indices: List[BaseIndex]):
         doc_query_engine = DocumentQueryEngineFactory(indices)
         qa_dataset = generate_question_context_pairs(
             random.sample(list(doc_query_engine.doc_store().docs.values()), 5),
@@ -54,14 +56,14 @@ class Evaluator:
         )
         if not os.path.exists(QA_DATASET_DIR):
             os.makedirs(QA_DATASET_DIR, exist_ok=True)
-        qa_dataset.save_json(os.path.join(QA_DATASET_DIR, f"{city_name}.json"))
+        qa_dataset.save_json(os.path.join(QA_DATASET_DIR, f"{name}.json"))
 
     def evaluate(self):
-        for city_name, indices in tqdm(list(self.city_indices.items())[:1], desc="document index"):
+        for city_name, indices in tqdm(self.city_indices, desc="document index"):
             doc_query_engine = DocumentQueryEngineFactory(indices)
             dataset_file = os.path.join(QA_DATASET_DIR, f"{city_name}.json")
             if self.force_rebuild_dataset or not os.path.exists(dataset_file):
-                self.generate_qa_dataset(city_name)
+                self.generate_qa_dataset(city_name, indices)
             qa_dataset = EmbeddingQAFinetuneDataset.from_json(dataset_file)
             doc_query_engine.create_query_engine(self.service_context)
             retriever_query_engine = doc_query_engine.create_query_engine(self.service_context)
@@ -86,7 +88,6 @@ def display_eval_result(city, name, eval_result: RetrievalEvalResult):
 
 
 def display_results(results: Dict[str, List[RetrievalEvalResult]]):
-    """Display results from evaluate."""
     name_list = []
     hit_rate_list = []
     mrr_list = []
