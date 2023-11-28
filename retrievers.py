@@ -6,7 +6,7 @@ from llama_index.query_engine import RetrieverQueryEngine
 from llama_index.schema import NodeWithScore
 
 
-class CustomRetriever(BaseRetriever):
+class MultiRetriever(BaseRetriever):
     """Custom retriever that performs both Vector search and Knowledge Graph search"""
 
     def __init__(

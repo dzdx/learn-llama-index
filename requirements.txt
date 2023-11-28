@@ -99,3 +99,4 @@ wrapt==1.15.0
 yarl==1.9.2
 zipp==3.17.0
 rake-nltk==1.0.6
+pytest==7.4.3

@@ -12,7 +12,7 @@ from llama_index.response.schema import RESPONSE_TYPE, Response
 from llama_index.selectors import LLMSingleSelector
 from llama_index.tools import QueryEngineTool
 
-from index import load_indices
+from query import load_indices
 from common.config import DEBUG, LLM_CACHE_ENABLED
 from common.llm import llm_predict, create_llm
 from common.prompt import CH_SINGLE_SELECT_PROMPT_TMPL
@@ -96,12 +96,11 @@ class Chatter:
         )
         return QueryEngine(route_query_engine, debug_handler)
 
+    def chat(self, query):
+        query_engine = self.create_query_engine()
+        response = query_engine.query(query)
+        query_engine.print_and_flush_debug_info()
+        return response
+
 
 chatter = Chatter()
-
-
-def chat(query):
-    query_engine = chatter.create_query_engine()
-    response = query_engine.query(query)
-    query_engine.print_and_flush_debug_info()
-    return response

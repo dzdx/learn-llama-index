@@ -1,7 +1,7 @@
 #! coding=utf-8
 import os
 import random
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import pandas as pd
 from llama_index import ServiceContext
@@ -13,13 +13,15 @@ from llama_index.query_engine import RetrieverQueryEngine
 from tqdm import tqdm
 
 from common.config import ROOT_PATH
-from index import load_indices
-from query import DocumentQueryEngine
+from query import load_indices
+from query import DocumentQueryEngineFactory
 from retrievers import QueryEngineToRetriever
 from common.llm import create_llm
 from common.prompt import CH_QA_GENERATE_PROMPT_TMPL
 
 QA_DATASET_DIR = os.path.join(ROOT_PATH, "qa_dataset")
+
+FORCE_REBUILD_DATASET = True
 
 
 class Evaluator:
@@ -31,19 +33,19 @@ class Evaluator:
             llm=self.llm
         )
 
-    def _find_retrievers(self, retriever_query_engine: RetrieverQueryEngine) -> Dict[str, BaseRetriever]:
-        custom_retriever = retriever_query_engine._retriever
-        name_to_retrievers = {
-            "query_engine": QueryEngineToRetriever(retriever_query_engine),
-            custom_retriever.__class__.__name__: custom_retriever
-        }
-        for retriever in custom_retriever._retrievers:
-            name_to_retrievers[retriever.__class__.__name__] = retriever
+    def _find_retrievers(self, retriever_query_engine: RetrieverQueryEngine) -> List[Tuple[str, BaseRetriever]]:
+        name_to_retrievers = []
+        multi_retriever = retriever_query_engine._retriever
+        for retriever in multi_retriever._retrievers:
+            name_to_retrievers.append((retriever.__class__.__name__, retriever))
+
+        name_to_retrievers.append((multi_retriever.__class__.__name__, multi_retriever))
+        name_to_retrievers.append(("query_engine", QueryEngineToRetriever(retriever_query_engine)))
         return name_to_retrievers
 
     def generate_qa_dataset(self, city_name):
         indices = self.city_indices[city_name]
-        doc_query_engine = DocumentQueryEngine(indices)
+        doc_query_engine = DocumentQueryEngineFactory(indices)
         qa_dataset = generate_question_context_pairs(
             random.sample(list(doc_query_engine.doc_store().docs.values()), 5),
             llm=self.llm,
@@ -55,8 +57,8 @@ class Evaluator:
         qa_dataset.save_json(os.path.join(QA_DATASET_DIR, f"{city_name}.json"))
 
     def evaluate(self):
-        for city_name, indices in tqdm(self.city_indices.items(), desc="document index"):
-            doc_query_engine = DocumentQueryEngine(indices)
+        for city_name, indices in tqdm(list(self.city_indices.items())[:1], desc="document index"):
+            doc_query_engine = DocumentQueryEngineFactory(indices)
             dataset_file = os.path.join(QA_DATASET_DIR, f"{city_name}.json")
             if self.force_rebuild_dataset or not os.path.exists(dataset_file):
                 self.generate_qa_dataset(city_name)
@@ -65,7 +67,7 @@ class Evaluator:
             retriever_query_engine = doc_query_engine.create_query_engine(self.service_context)
             name_to_retrievers = self._find_retrievers(retriever_query_engine)
             results = {}
-            for name, retriever in tqdm(name_to_retrievers.items(), desc="retrievers"):
+            for name, retriever in tqdm(name_to_retrievers, desc="retrievers"):
                 eval_results = []
                 for query, doc_ids in qa_dataset.query_docid_pairs:
                     retriever_evaluator = RetrieverEvaluator.from_metric_names(
@@ -110,5 +112,5 @@ def display_results(results: Dict[str, List[RetrievalEvalResult]]):
 
 
 if __name__ == '__main__':
-    evaluator = Evaluator()
+    evaluator = Evaluator(force_rebuild_dataset=FORCE_REBUILD_DATASET)
     evaluator.evaluate()

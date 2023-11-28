@@ -1,4 +1,4 @@
-from route import chat
+from route import chatter
 
 
 def chat_loop():
@@ -8,12 +8,12 @@ def chat_loop():
             break
         if query.strip() == "":
             continue
-        ans = chat(query)
+        ans = chatter.chat(query)
         print(ans)
 
 
 if __name__ == '__main__':
-    print(chat("你好呀"))
-    print(chat("北京气候如何"))
-    print(chat("杭州市在中国哪里"))
+    print(chatter.chat("你好呀"))
+    print(chatter.chat("北京气候如何"))
+    print(chatter.chat("杭州市在中国哪里"))
     # chat_loop()

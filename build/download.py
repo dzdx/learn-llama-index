@@ -22,7 +22,7 @@ def download(title: str, data_dir: str) -> str:
     if not os.path.exists(data_dir):
         os.makedirs(data_dir, exist_ok=True)
 
-    file_path = os.path.join(data_dir, f"{title}.txt")
+    file_path = os.path.join(data_dir, f"{title}")
     with open(file_path, 'w') as fp:
         fp.write(wiki_text)
     return file_path

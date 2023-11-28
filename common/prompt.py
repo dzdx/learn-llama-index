@@ -71,7 +71,6 @@ CH_TREE_SUMMARIZE_PROMPT = PromptTemplate(
     CH_TREE_SUMMARIZE_TMPL, prompt_type=PromptType.SUMMARY
 )
 
-
 CH_SINGLE_SELECT_PROMPT_TMPL = (
     "以下给出了一些选项。它们被编号为从1到{num_choices}的列表，"
     "列表中的每一项对应一个摘要。\n"
@@ -81,7 +80,6 @@ CH_SINGLE_SELECT_PROMPT_TMPL = (
     "只使用上述选项，而不使用先前的知识，返回"
     "与问题：'{query_str}'最相关的选项\n"
 )
-
 
 CH_QA_GENERATE_PROMPT_TMPL = """\
 以下是上下文信息。
@@ -97,3 +95,36 @@ CH_QA_GENERATE_PROMPT_TMPL = """\
 {num_questions_per_chunk}个问题的测验/考试设定问题。问题应该在文档中多样化。将问题限制在\
 提供的上下文信息中。
 """
+
+CH_SUMMARY_PROMPT_TMPL = (
+    "撰写以下内容的摘要。尽量只使用提供的"
+    "信息。"
+    "尽量包含尽可能多的关键细节。\n"
+    "\n"
+    "\n"
+    "{context_str}\n"
+    "\n"
+    "\n"
+    'SUMMARY："""\n'
+)
+
+CH_SUMMARY_PROMPT = PromptTemplate(
+    CH_SUMMARY_PROMPT_TMPL, prompt_type=PromptType.SUMMARY
+)
+
+CH_INSERT_PROMPT_TMPL = (
+    "下述为上下文信息，以编号列表的形式提供 "
+    "(从1到{num_chunks})，"
+    "列表中的每一项对应一个摘要。\n"
+    "---------------------\n"
+    "{context_list}"
+    "---------------------\n"
+    "考虑到上述上下文信息，这里有一条新的"
+    "信息：{new_chunk_text}\n"
+    "回答应该更新哪个摘要的编号。"
+    "答案应为与问题最相关"
+    "摘要的编号。\n"
+)
+CH_INSERT_PROMPT = PromptTemplate(
+    CH_INSERT_PROMPT_TMPL, prompt_type=PromptType.TREE_INSERT
+)

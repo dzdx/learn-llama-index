@@ -9,3 +9,6 @@ DEBUG = False
 LLM_CACHE_ENABLED = True
 
 OPENAI_API_KEY = None
+
+data_dir = os.path.join(ROOT_PATH, 'data')
+index_dir = os.path.join(ROOT_PATH, 'index')
