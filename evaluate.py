@@ -1,23 +1,30 @@
 #! coding=utf-8
+import os
+import random
 from typing import Dict, List
 
 import pandas as pd
 from llama_index import ServiceContext
 from llama_index.evaluation import RetrieverEvaluator, generate_question_context_pairs, RetrievalEvalResult
+from llama_index.finetuning import EmbeddingQAFinetuneDataset
 from llama_index.indices.base import BaseIndex
 from llama_index.indices.base_retriever import BaseRetriever
 from llama_index.query_engine import RetrieverQueryEngine
 from tqdm import tqdm
 
+from common.config import ROOT_PATH
 from index import load_indices
 from query import DocumentQueryEngine
 from retrievers import QueryEngineToRetriever
 from common.llm import create_llm
 from common.prompt import CH_QA_GENERATE_PROMPT_TMPL
 
+QA_DATASET_DIR = os.path.join(ROOT_PATH, "qa_dataset")
+
 
 class Evaluator:
-    def __init__(self):
+    def __init__(self, force_rebuild_dataset: bool = False):
+        self.force_rebuild_dataset = force_rebuild_dataset
         self.city_indices: Dict[str, List[BaseIndex]] = load_indices()
         self.llm = create_llm()
         self.service_context = ServiceContext.from_defaults(
@@ -34,15 +41,26 @@ class Evaluator:
             name_to_retrievers[retriever.__class__.__name__] = retriever
         return name_to_retrievers
 
+    def generate_qa_dataset(self, city_name):
+        indices = self.city_indices[city_name]
+        doc_query_engine = DocumentQueryEngine(indices)
+        qa_dataset = generate_question_context_pairs(
+            random.sample(list(doc_query_engine.doc_store().docs.values()), 5),
+            llm=self.llm,
+            num_questions_per_chunk=2,
+            qa_generate_prompt_tmpl=CH_QA_GENERATE_PROMPT_TMPL,
+        )
+        if not os.path.exists(QA_DATASET_DIR):
+            os.makedirs(QA_DATASET_DIR, exist_ok=True)
+        qa_dataset.save_json(os.path.join(QA_DATASET_DIR, f"{city_name}.json"))
+
     def evaluate(self):
         for city_name, indices in tqdm(self.city_indices.items(), desc="document index"):
             doc_query_engine = DocumentQueryEngine(indices)
-            qa_dataset = generate_question_context_pairs(
-                list(doc_query_engine.doc_store().docs.values())[:5],
-                llm=self.llm,
-                num_questions_per_chunk=2,
-                qa_generate_prompt_tmpl=CH_QA_GENERATE_PROMPT_TMPL,
-            )
+            dataset_file = os.path.join(QA_DATASET_DIR, f"{city_name}.json")
+            if self.force_rebuild_dataset or not os.path.exists(dataset_file):
+                self.generate_qa_dataset(city_name)
+            qa_dataset = EmbeddingQAFinetuneDataset.from_json(dataset_file)
             doc_query_engine.create_query_engine(self.service_context)
             retriever_query_engine = doc_query_engine.create_query_engine(self.service_context)
             name_to_retrievers = self._find_retrievers(retriever_query_engine)

@@ -3,3 +3,4 @@ data
 index
 .idea
 .llm_cache
+qa_dataset
