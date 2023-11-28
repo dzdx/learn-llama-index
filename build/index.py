@@ -36,6 +36,8 @@ def build_nodes(data_file: str) -> List[BaseNode]:
 
 def build_index(index_file: str, data_file: str):
     # TODO
+    if os.path.exists(index_file):
+        return
     nodes = build_nodes(data_file)
     storage_context = StorageContext.from_defaults()
     vector_index = VectorStoreIndex(nodes,
