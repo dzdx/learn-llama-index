@@ -4,3 +4,4 @@ index
 .idea
 .llm_cache
 qa_dataset
+.DS_Store

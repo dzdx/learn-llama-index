@@ -20,7 +20,22 @@ from common.utils import ObjectEncoder
 from query import create_compose_query_engine
 
 
-class SimpleQueryEngine(BaseQueryEngine):
+class EchoNameEngine(BaseQueryEngine):
+    def __init__(self, name: str, callback_manager: CallbackManager = None):
+        self.name = name
+        super().__init__(callback_manager)
+
+    async def _aquery(self, query_bundle: QueryBundle) -> RESPONSE_TYPE:
+        pass
+
+    def _get_prompt_modules(self) -> PromptMixinType:
+        return {}
+
+    def _query(self, query_bundle: QueryBundle) -> RESPONSE_TYPE:
+        return Response(f"我是{self.name}")
+
+
+class LlmQueryEngine(BaseQueryEngine):
 
     def __init__(self, llm: LLM, callback_manager: CallbackManager):
         self.llm = llm
@@ -36,7 +51,7 @@ class SimpleQueryEngine(BaseQueryEngine):
         pass
 
 
-class QueryEngine:
+class QueryEngineWrapper:
     def __init__(self, query_engine: BaseQueryEngine, debug_handler: LlamaDebugHandler):
         self.query_engine = query_engine
         self.debug_handler = debug_handler
@@ -53,12 +68,32 @@ class QueryEngine:
             self.debug_handler.flush_event_logs()
 
 
+def create_route_query_engine(query_engines: List[BaseQueryEngine], descriptions: List[str],
+                              service_context: ServiceContext = None):
+    assert len(query_engines) == len(descriptions)
+    # TODO
+    tools = []
+    for i, query_engine in enumerate(query_engines):
+        query_tool = QueryEngineTool.from_defaults(
+            query_engine=query_engine,
+            description=descriptions[i]
+        )
+        tools.append(query_tool)
+    return llama_index.query_engine.RouterQueryEngine(
+        selector=LLMSingleSelector.from_defaults(service_context=service_context,
+                                                 prompt_template_str=CH_SINGLE_SELECT_PROMPT_TMPL),
+        service_context=service_context,
+        query_engine_tools=tools
+    )
+
+
 class Chatter:
 
     def __init__(self):
         self.city_indices: Dict[str, List[BaseIndex]] = load_indices()
 
-    def create_query_engine(self) -> QueryEngine:
+    def create_query_engine(self) -> QueryEngineWrapper:
+        # TODO
         if DEBUG:
             debug_handler = LlamaDebugHandler()
             cb_manager = CallbackManager([debug_handler])
@@ -72,35 +107,16 @@ class Chatter:
         )
         index_query_engine = create_compose_query_engine(self.city_indices, service_context)
 
-        query_tool_city = QueryEngineTool.from_defaults(
-            query_engine=index_query_engine,
-            description=(
+        route_query_engine = create_route_query_engine(
+            [index_query_engine, LlmQueryEngine(llm=llm, callback_manager=cb_manager)],
+            [
                 f"提供 {', '.join(self.city_indices.keys())} 这几个城市的相关信息"
-            ),
-        )
-
-        query_tool_simple = QueryEngineTool.from_defaults(
-            query_engine=SimpleQueryEngine(llm=llm, callback_manager=cb_manager),
-            description=(
                 f"提供其他所有信息"
-            ),
-        )
-        route_query_engine = llama_index.query_engine.RouterQueryEngine(
-            selector=LLMSingleSelector.from_defaults(service_context=service_context,
-                                                     prompt_template_str=CH_SINGLE_SELECT_PROMPT_TMPL),
-            service_context=service_context,
-            query_engine_tools=[
-                query_tool_city,
-                query_tool_simple,
-            ]
-        )
-        return QueryEngine(route_query_engine, debug_handler)
+            ], service_context=service_context)
+        return QueryEngineWrapper(route_query_engine, debug_handler)
 
     def chat(self, query):
         query_engine = self.create_query_engine()
         response = query_engine.query(query)
         query_engine.print_and_flush_debug_info()
         return response
-
-
-chatter = Chatter()

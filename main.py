@@ -1,7 +1,8 @@
-from route import chatter
+from route import Chatter
 
 
 def chat_loop():
+    chatter = Chatter()
     while True:
         query = input("\nEnter a query:")
         if query == "exit":
@@ -13,7 +14,4 @@ def chat_loop():
 
 
 if __name__ == '__main__':
-    print(chatter.chat("你好呀"))
-    print(chatter.chat("北京气候如何"))
-    print(chatter.chat("杭州市在中国哪里"))
-    # chat_loop()
+    chat_loop()
