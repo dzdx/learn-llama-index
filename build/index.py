@@ -2,6 +2,7 @@
 
 
 import os
+import shutil
 from typing import List
 
 from llama_index import ServiceContext, StorageContext, VectorStoreIndex, SimpleDirectoryReader, TreeIndex
@@ -56,6 +57,10 @@ def download_and_build_index(title: str, data_dir: str, index_dir: str):
 
 
 def build_all():
+    if os.path.exists(data_dir):
+        shutil.rmtree(data_dir)
+    if os.path.exists(index_dir):
+        shutil.rmtree(index_dir)
     titles = ['北京市', '上海市', '深圳市', '杭州市', '南京市']
     for title in titles:
         download_and_build_index(title, data_dir, index_dir)
