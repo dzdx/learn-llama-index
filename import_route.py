@@ -1,16 +1,16 @@
-from common.config import USE_ANSWER
+from common.config import ROUTE_TODO
 
-if USE_ANSWER:
-    from query_answer.query_engine import load_indices
-    from query_answer.query_engine import DocumentQueryEngineFactory
-    from query_answer.retrievers import QueryEngineToRetriever
-    from query_answer.route import Chatter, EchoNameEngine, create_route_query_engine
-    from query_answer.compose import create_compose_query_engine
-    from query_answer.query_engine import load_index, DocumentQueryEngineFactory, create_response_synthesizer, \
+if ROUTE_TODO:
+    from query_todo.query_engine import load_indices
+    from query_todo.query_engine import DocumentQueryEngineFactory
+    from query_todo.retrievers import QueryEngineToRetriever
+    from query_todo.route import Chatter, EchoNameEngine, create_route_query_engine
+    from query_todo.compose import create_compose_query_engine
+    from query_todo.query_engine import load_index, DocumentQueryEngineFactory, create_response_synthesizer, \
         load_indices
-    from query_answer.retrievers import MultiRetriever
-    from build_answer.download import download
-    from build_answer.index import download_and_build_index, data_dir, index_dir, build_all, build_nodes
+    from query_todo.retrievers import MultiRetriever
+    from build_todo.download import download
+    from build_todo.index import download_and_build_index, data_dir, index_dir, build_all, build_nodes
 else:
     from query.query_engine import load_indices
     from query.query_engine import DocumentQueryEngineFactory

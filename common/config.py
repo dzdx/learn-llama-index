@@ -8,9 +8,11 @@ ROOT_PATH = os.path.dirname(os.path.dirname(__file__))
 DEBUG = True
 LLM_CACHE_ENABLED = True
 
-OPENAI_API_KEY = None
+OPENAI_API_KEY = ''
+if OPENAI_API_KEY:
+    os.environ['OPENAI_API_KEY'] = OPENAI_API_KEY
 
 data_dir = os.path.join(ROOT_PATH, 'data')
 index_dir = os.path.join(ROOT_PATH, 'index')
 
-USE_ANSWER = False
+ROUTE_TODO = False

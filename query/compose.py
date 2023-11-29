@@ -21,7 +21,17 @@ def create_compose_query_engine(city_indices: Dict[str, List[BaseIndex]],
             indices=indices,
             summary=summary
         ))
-    # TODO
-    # 创建一个 ComposableGraphQueryEngine, 组合多个城市的 query_engine
-    # https://docs.llamaindex.ai/en/stable/module_guides/indexing/composability.html#querying-the-graph
-    raise NotImplementedError
+
+    # 为每个城市的query engine指定一个summary，ComposableGraph会使用大模型来判断问题需要使用哪一个QueryEngine
+    graph = ComposableGraph.from_indices(
+        TreeIndex,
+        [e.first_index() for e in query_engines],
+        [e.summary for e in query_engines],
+        service_context=service_context,
+    )
+    return graph.as_query_engine(
+        response_synthesizer=create_response_synthesizer(service_context=service_context),
+        custom_query_engines={e.first_index().index_id: e.create_query_engine(service_context) for e in query_engines},
+        service_context=service_context,
+        query_template=CH_QUERY_PROMPT,
+    )

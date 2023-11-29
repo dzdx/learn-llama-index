@@ -5,7 +5,7 @@ from llama_index.indices.base import BaseIndex
 from llama_index.indices.query.base import BaseQueryEngine
 
 from common.prompt import CH_QUERY_PROMPT
-from query_answer.query_engine import DocumentQueryEngineFactory, create_response_synthesizer
+from query_todo.query_engine import DocumentQueryEngineFactory, create_response_synthesizer
 
 
 def create_compose_query_engine(city_indices: Dict[str, List[BaseIndex]],
@@ -21,16 +21,7 @@ def create_compose_query_engine(city_indices: Dict[str, List[BaseIndex]],
             indices=indices,
             summary=summary
         ))
-
-    graph = ComposableGraph.from_indices(
-        TreeIndex,
-        [e.first_index() for e in query_engines],
-        [e.summary for e in query_engines],
-        service_context=service_context,
-    )
-    return graph.as_query_engine(
-        response_synthesizer=create_response_synthesizer(service_context=service_context),
-        custom_query_engines={e.first_index().index_id: e.create_query_engine(service_context) for e in query_engines},
-        service_context=service_context,
-        query_template=CH_QUERY_PROMPT,
-    )
+    # TODO
+    # 创建一个 ComposableGraphQueryEngine, 组合多个城市的 query_engine
+    # https://docs.llamaindex.ai/en/stable/module_guides/indexing/composability.html#querying-the-graph
+    raise NotImplementedError

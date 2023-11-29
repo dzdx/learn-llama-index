@@ -13,10 +13,10 @@ from llama_index.response_synthesizers import ResponseMode, BaseSynthesizer
 
 from common.config import index_dir
 from common.prompt import CH_CHOICE_SELECT_PROMPT, CH_TREE_SUMMARIZE_PROMPT
-from query_answer.retrievers import MultiRetriever
+from query_todo.retrievers import MultiRetriever
 
 
-def load_index(title: str, service_context: ServiceContext=None) -> List[BaseIndex]:
+def load_index(title: str, service_context: ServiceContext = None) -> List[BaseIndex]:
     storage_context = StorageContext.from_defaults(persist_dir=os.path.join(index_dir, title))
     return load_indices_from_storage(
         storage_context=storage_context,
@@ -32,11 +32,9 @@ def load_indices(service_context: ServiceContext) -> Dict[str, List[BaseIndex]]:
 
 
 def create_response_synthesizer(service_context: ServiceContext = None) -> BaseSynthesizer:
-    return get_response_synthesizer(
-        response_mode=ResponseMode.TREE_SUMMARIZE,
-        summary_template=CH_TREE_SUMMARIZE_PROMPT,
-        service_context=service_context,
-    )
+    # TODO
+    # https://docs.llamaindex.ai/en/stable/module_guides/querying/response_synthesizers/root.html#get-started
+    raise NotImplementedError
 
 
 @dataclass
@@ -48,26 +46,16 @@ class DocumentQueryEngineFactory:
         return self.indices[0]
 
     def create_retrievers(self):
-        ret = []
-        for index in self.indices:
-            if isinstance(index, VectorStoreIndex):
-                ret.append(index.as_retriever(similarity_top_k=8))
-            if isinstance(index, TreeIndex):
-                ret.append(index.as_retriever(retriever_mode=TreeRetrieverMode.SELECT_LEAF_EMBEDDING))
-        return ret
+        # TODO
+        # 基于indices 创建多个retriever
+        # https://docs.llamaindex.ai/en/stable/understanding/querying/querying.html#customizing-the-stages-of-querying
+        raise NotImplementedError
 
     def doc_store(self):
         return self.indices[0].docstore
 
     def create_query_engine(self, service_context: ServiceContext) -> RetrieverQueryEngine:
-        retriever = MultiRetriever(self.create_retrievers())
-        node_postprocessors = [
-            LLMRerank(top_n=4, choice_batch_size=2, choice_select_prompt=CH_CHOICE_SELECT_PROMPT,
-                      service_context=service_context)
-        ]
-        return RetrieverQueryEngine.from_args(
-            retriever,
-            node_postprocessors=node_postprocessors,
-            service_context=service_context,
-            response_synthesizer=create_response_synthesizer(service_context)
-        )
+        # TODO
+        # 结合 retriever, llm_rerank, response_synthesizer 创建一个完整的query engine
+        # https://docs.llamaindex.ai/en/stable/understanding/querying/querying.html
+        raise NotImplementedError

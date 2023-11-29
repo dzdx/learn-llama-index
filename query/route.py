@@ -54,10 +54,19 @@ class LlmQueryEngine(BaseQueryEngine):
 def create_route_query_engine(query_engines: List[BaseQueryEngine], descriptions: List[str],
                               service_context: ServiceContext = None):
     assert len(query_engines) == len(descriptions)
-    # TODO
-    # 根据传入的多个query_engines和descriptions创建 RouteQueryEngine，实现query engine 的路由
-    # https://docs.llamaindex.ai/en/stable/module_guides/querying/router/root.html#using-as-a-query-engine
-    raise NotImplementedError
+    tools = []
+    for i, query_engine in enumerate(query_engines):
+        query_tool = QueryEngineTool.from_defaults(
+            query_engine=query_engine,
+            description=descriptions[i]
+        )
+        tools.append(query_tool)
+    return llama_index.query_engine.RouterQueryEngine(
+        selector=LLMSingleSelector.from_defaults(service_context=service_context,
+                                                 prompt_template_str=CH_SINGLE_SELECT_PROMPT_TMPL),
+        service_context=service_context,
+        query_engine_tools=tools
+    )
 
 
 class Chatter:
@@ -85,10 +94,13 @@ class Chatter:
         index_query_engine = create_compose_query_engine(self.city_indices, self.service_context)
         index_summary = f"提供 {', '.join(self.city_indices.keys())} 这几个城市的相关信息"
         llm_query_engine = LlmQueryEngine(llm=self.llm, callback_manager=self.cb_manager)
-        llm_summary = f"提供其他所有信息"
-        # 实现意图识别，把不同的query路由到不同的query_engine上，实现聊天和城市信息查询两个功能的分流
-        # https://docs.llamaindex.ai/en/stable/module_guides/querying/router/root.html#using-as-a-query-engine
-        raise NotImplementedError
+        llm_summary = "提供其他所有信息"
+
+        route_query_engine = create_route_query_engine(
+            [index_query_engine, llm_query_engine],
+            [index_summary, llm_summary],
+            service_context=self.service_context)
+        return route_query_engine
 
     def _print_and_flush_debug_info(self):
         if self.debug_handler:

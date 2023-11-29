@@ -16,7 +16,7 @@ from common.prompt import CH_CHOICE_SELECT_PROMPT, CH_TREE_SUMMARIZE_PROMPT
 from query.retrievers import MultiRetriever
 
 
-def load_index(title: str, service_context: ServiceContext = None) -> List[BaseIndex]:
+def load_index(title: str, service_context: ServiceContext=None) -> List[BaseIndex]:
     storage_context = StorageContext.from_defaults(persist_dir=os.path.join(index_dir, title))
     return load_indices_from_storage(
         storage_context=storage_context,
@@ -32,9 +32,13 @@ def load_indices(service_context: ServiceContext) -> Dict[str, List[BaseIndex]]:
 
 
 def create_response_synthesizer(service_context: ServiceContext = None) -> BaseSynthesizer:
-    # TODO
-    # https://docs.llamaindex.ai/en/stable/module_guides/querying/response_synthesizers/root.html#get-started
-    raise NotImplementedError
+    # 采用TreeSummarize的方式对多个上下文进行逐步总结，防止超过llm的context limit
+    # 同时用中文prompt得到更加稳定的中文summary
+    return get_response_synthesizer(
+        response_mode=ResponseMode.TREE_SUMMARIZE,
+        summary_template=CH_TREE_SUMMARIZE_PROMPT,
+        service_context=service_context,
+    )
 
 
 @dataclass
@@ -46,16 +50,31 @@ class DocumentQueryEngineFactory:
         return self.indices[0]
 
     def create_retrievers(self):
-        # TODO
-        # 基于indices 创建多个retriever
-        # https://docs.llamaindex.ai/en/stable/understanding/querying/querying.html#customizing-the-stages-of-querying
-        raise NotImplementedError
+        ret = []
+        for index in self.indices:
+            # 每个索引可能会用不同的生成retriever的方式
+            # 取 `similarity_top_k` 和query 最相似的 node
+            if isinstance(index, VectorStoreIndex):
+                ret.append(index.as_retriever(similarity_top_k=8))
+            if isinstance(index, TreeIndex):
+                # TreeRetriever采用自顶向下逐步检索的方式得到叶子节点
+                ret.append(index.as_retriever(retriever_mode=TreeRetrieverMode.SELECT_LEAF_EMBEDDING))
+        return ret
 
     def doc_store(self):
         return self.indices[0].docstore
 
     def create_query_engine(self, service_context: ServiceContext) -> RetrieverQueryEngine:
-        # TODO
-        # 结合 retriever, llm_rerank, response_synthesizer 创建一个完整的query engine
-        # https://docs.llamaindex.ai/en/stable/understanding/querying/querying.html
-        raise NotImplementedError
+        # 组合多索引召回、排序，答案合成，构建最终的query engine
+        retriever = MultiRetriever(self.create_retrievers())
+        # LLMRerank只选取最相关的top_n, 进一步提高命中率，防止召回阶段拿到不相关的内容
+        node_postprocessors = [
+            LLMRerank(top_n=4, choice_batch_size=2, choice_select_prompt=CH_CHOICE_SELECT_PROMPT,
+                      service_context=service_context)
+        ]
+        return RetrieverQueryEngine.from_args(
+            retriever,
+            node_postprocessors=node_postprocessors,
+            service_context=service_context,
+            response_synthesizer=create_response_synthesizer(service_context)
+        )

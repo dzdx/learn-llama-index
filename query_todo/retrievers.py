@@ -13,20 +13,18 @@ class MultiRetriever(BaseRetriever):
             self,
             retrievers,
     ) -> None:
+        """Init params."""
         if retrievers is None:
             raise ValueError("Invalid retrievers.")
         self._retrievers = retrievers
 
     def _retrieve(self, query_bundle: QueryBundle) -> List[NodeWithScore]:
+        """Retrieve nodes given query."""
         if self._retrievers is None:
             return []
-        # 对多个retrieve的召回结果进行合并
-        combined_dict = {}
-        for retriever in self._retrievers:
-            cur_nodes = retriever.retrieve(query_bundle)
-            combined_dict.update({n.node.node_id: n for n in cur_nodes})
-        retrieve_nodes = sorted(list(combined_dict.values()), key=lambda n: n.node_id)
-        return retrieve_nodes
+        # TODO
+        # self.retrievers 包含了多个子 index 的 retriever， MultiRetriever 对多路retrieve的结果取并集，以node.node_id 作为key
+        raise NotImplementedError
 
 
 class QueryEngineToRetriever(BaseRetriever):

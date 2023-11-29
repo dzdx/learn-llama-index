@@ -9,7 +9,7 @@ from llama_index.node_parser import SimpleNodeParser
 from llama_index.schema import BaseNode
 from llama_index.text_splitter import SentenceSplitter
 
-from build_answer.download import download
+from build_todo.download import download
 from common.config import data_dir, index_dir
 from common.llm import create_llm
 from common.prompt import CH_SUMMARY_PROMPT
@@ -25,11 +25,10 @@ service_context = ServiceContext.from_defaults(
 
 
 def build_nodes(data_file: str) -> List[BaseNode]:
-    documents = SimpleDirectoryReader(input_files=[data_file]).load_data()
-    for doc in documents:
-        doc.excluded_llm_metadata_keys.append("file_path")
-        doc.excluded_embed_metadata_keys.append("file_path")
-    return service_context.node_parser.get_nodes_from_documents(documents)
+    # TODO
+    # data_file 是一个txt文件，请使用 SimpleDirectoryReader 和 service_context.node_parser 把一个文件解析成List[BaseNode],
+    # https://docs.llamaindex.ai/en/stable/understanding/loading/loading.html#parsing-documents-into-nodes
+    raise NotImplementedError
 
 
 def build_index(index_file: str, data_file: str):
@@ -37,16 +36,10 @@ def build_index(index_file: str, data_file: str):
         return
     nodes = build_nodes(data_file)
     storage_context = StorageContext.from_defaults()
-    vector_index = VectorStoreIndex(nodes,
-                                    service_context=service_context,
-                                    storage_context=storage_context,
-                                    show_progress=True)
-    tree_index = TreeIndex(nodes, num_children=8,
-                           service_context=service_context,
-                           storage_context=storage_context,
-                           summary_template=CH_SUMMARY_PROMPT,
-                           show_progress=True)
-    storage_context.persist(persist_dir=index_file)
+    # TODO
+    # 基于 nodes 构建 VectorStoreIndex 和 TreeIndex 索引，并统一保存到 storage_context
+    # https://docs.llamaindex.ai/en/stable/understanding/indexing/indexing.html#using-vector-store-index
+    raise NotImplementedError
 
 
 def download_and_build_index(title: str, data_dir: str, index_dir: str):
