@@ -12,3 +12,5 @@ OPENAI_API_KEY = None
 
 data_dir = os.path.join(ROOT_PATH, 'data')
 index_dir = os.path.join(ROOT_PATH, 'index')
+
+USE_ANSWER = False

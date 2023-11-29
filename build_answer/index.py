@@ -9,7 +9,7 @@ from llama_index.node_parser import SimpleNodeParser
 from llama_index.schema import BaseNode
 from llama_index.text_splitter import SentenceSplitter
 
-from build.download import download
+from build_answer.download import download
 from common.config import data_dir, index_dir
 from common.llm import create_llm
 from common.prompt import CH_SUMMARY_PROMPT
@@ -25,15 +25,28 @@ service_context = ServiceContext.from_defaults(
 
 
 def build_nodes(data_file: str) -> List[BaseNode]:
-    # TODO
-    raise NotImplementedError
+    documents = SimpleDirectoryReader(input_files=[data_file]).load_data()
+    for doc in documents:
+        doc.excluded_llm_metadata_keys.append("file_path")
+        doc.excluded_embed_metadata_keys.append("file_path")
+    return service_context.node_parser.get_nodes_from_documents(documents)
 
 
 def build_index(index_file: str, data_file: str):
     if os.path.exists(index_file):
         return
-    # TODO
-    raise NotImplementedError
+    nodes = build_nodes(data_file)
+    storage_context = StorageContext.from_defaults()
+    vector_index = VectorStoreIndex(nodes,
+                                    service_context=service_context,
+                                    storage_context=storage_context,
+                                    show_progress=True)
+    tree_index = TreeIndex(nodes, num_children=8,
+                           service_context=service_context,
+                           storage_context=storage_context,
+                           summary_template=CH_SUMMARY_PROMPT,
+                           show_progress=True)
+    storage_context.persist(persist_dir=index_file)
 
 
 def download_and_build_index(title: str, data_dir: str, index_dir: str):

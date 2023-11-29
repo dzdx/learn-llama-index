@@ -13,11 +13,9 @@ from llama_index.query_engine import RetrieverQueryEngine
 from tqdm import tqdm
 
 from common.config import ROOT_PATH
-from query.query_engine import load_indices
-from query.query_engine import DocumentQueryEngineFactory
-from query.retrievers import QueryEngineToRetriever
 from common.llm import create_llm
 from common.prompt import CH_QA_GENERATE_PROMPT_TMPL
+from import_route import load_indices, QueryEngineToRetriever, DocumentQueryEngineFactory
 
 QA_DATASET_DIR = os.path.join(ROOT_PATH, "qa_dataset")
 

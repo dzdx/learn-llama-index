@@ -9,15 +9,15 @@ from llama_index.query_engine import ComposableGraphQueryEngine
 from llama_index.response_synthesizers import TreeSummarize
 from llama_index.schema import TextNode, NodeWithScore
 
-from build.download import download
-from build.index import download_and_build_index, data_dir, index_dir, build_all, build_nodes
 from common.llm import create_llm
 from common.prompt import CH_TREE_SUMMARIZE_PROMPT
 from common.utils import find_typed
-from query.compose import create_compose_query_engine
-from query.query_engine import load_index, DocumentQueryEngineFactory, create_response_synthesizer, load_indices
-from query.retrievers import MultiRetriever
-from query.route import EchoNameEngine, create_route_query_engine, Chatter
+from import_route import download
+from import_route import download_and_build_index, data_dir, index_dir, build_all, build_nodes
+from import_route import create_compose_query_engine
+from import_route import load_index, DocumentQueryEngineFactory, create_response_synthesizer, load_indices
+from import_route import MultiRetriever
+from import_route import EchoNameEngine, create_route_query_engine, Chatter
 
 test_llm = create_llm()
 
