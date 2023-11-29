@@ -55,9 +55,7 @@ def download_and_build_index(title: str, data_dir: str, index_dir: str):
 
 
 def build_all():
-    titles = ['北京市', '上海市', '深圳市']
-    for title in titles:
-        download_and_build_index(title, data_dir, index_dir)
+    raise NotImplementedError
 
 
 if __name__ == '__main__':

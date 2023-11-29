@@ -32,7 +32,6 @@ def load_indices(service_context: ServiceContext) -> Dict[str, List[BaseIndex]]:
 
 
 def create_response_synthesizer(service_context: ServiceContext = None) -> BaseSynthesizer:
-    # TODO
     return get_response_synthesizer(
         response_mode=ResponseMode.TREE_SUMMARIZE,
         summary_template=CH_TREE_SUMMARIZE_PROMPT,
@@ -49,7 +48,6 @@ class DocumentQueryEngineFactory:
         return self.indices[0]
 
     def create_retrievers(self):
-        # TODO
         ret = []
         for index in self.indices:
             if isinstance(index, VectorStoreIndex):
@@ -62,7 +60,6 @@ class DocumentQueryEngineFactory:
         return self.indices[0].docstore
 
     def create_query_engine(self, service_context: ServiceContext) -> RetrieverQueryEngine:
-        # TODO
         retriever = MultiRetriever(self.create_retrievers())
         node_postprocessors = [
             LLMRerank(top_n=4, choice_batch_size=2, choice_select_prompt=CH_CHOICE_SELECT_PROMPT,

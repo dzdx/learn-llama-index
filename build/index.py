@@ -27,7 +27,6 @@ service_context = ServiceContext.from_defaults(
 def build_nodes(data_file: str) -> List[BaseNode]:
     # TODO
     # data_file 是一个txt文件，请使用 SimpleDirectoryReader 和 service_context.node_parser 把一个文件解析成List[BaseNode],
-    # 请进行 debug 注意metadata 的处理
     # https://docs.llamaindex.ai/en/stable/understanding/loading/loading.html#parsing-documents-into-nodes
     raise NotImplementedError
 
@@ -38,7 +37,7 @@ def build_index(index_file: str, data_file: str):
     nodes = build_nodes(data_file)
     storage_context = StorageContext.from_defaults()
     # TODO
-    # 基于 nodes 构建 VectorStoreIndex 和 TreeIndex 索引，并同意保存到 storage_context
+    # 基于 nodes 构建 VectorStoreIndex 和 TreeIndex 索引，并统一保存到 storage_context
     # https://docs.llamaindex.ai/en/stable/understanding/indexing/indexing.html#using-vector-store-index
     raise NotImplementedError
 

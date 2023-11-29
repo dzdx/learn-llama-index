@@ -12,12 +12,8 @@ class MultiRetriever(BaseRetriever):
     def __init__(
             self,
             retrievers,
-            mode: str = "OR",
     ) -> None:
         """Init params."""
-        if mode not in ("AND", "OR"):
-            raise ValueError("Invalid mode.")
-        self._mode = mode
         if retrievers is None:
             raise ValueError("Invalid retrievers.")
         self._retrievers = retrievers

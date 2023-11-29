@@ -86,7 +86,8 @@ class Chatter:
         index_summary = f"提供 {', '.join(self.city_indices.keys())} 这几个城市的相关信息"
         llm_query_engine = LlmQueryEngine(llm=self.llm, callback_manager=self.cb_manager)
         llm_summary = f"提供其他所有信息"
-        # 实现意图识别，把不同的query路由到不同的query_engine上
+        # 实现意图识别，把不同的query路由到不同的query_engine上，实现聊天和城市信息查询两个功能的分流
+        # https://docs.llamaindex.ai/en/stable/module_guides/querying/router/root.html#using-as-a-query-engine
         raise NotImplementedError
 
     def _print_and_flush_debug_info(self):

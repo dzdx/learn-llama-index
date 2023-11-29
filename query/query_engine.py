@@ -47,6 +47,8 @@ class DocumentQueryEngineFactory:
 
     def create_retrievers(self):
         # TODO
+        # 基于indices 创建多个retriever
+        # https://docs.llamaindex.ai/en/stable/understanding/querying/querying.html#customizing-the-stages-of-querying
         raise NotImplementedError
 
     def doc_store(self):
@@ -54,4 +56,6 @@ class DocumentQueryEngineFactory:
 
     def create_query_engine(self, service_context: ServiceContext) -> RetrieverQueryEngine:
         # TODO
+        # 结合 retriever, llm_rerank, response_synthesizer 创建一个完整的query engine
+        # https://docs.llamaindex.ai/en/stable/understanding/querying/querying.html
         raise NotImplementedError
