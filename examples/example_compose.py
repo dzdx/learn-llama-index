@@ -1,16 +1,24 @@
-from llama_index import ServiceContext, ComposableGraph, TreeIndex, VectorStoreIndex
+import os
 
+from llama_index import ServiceContext, ComposableGraph, TreeIndex, VectorStoreIndex, get_response_synthesizer, \
+    StorageContext, load_indices_from_storage
+from llama_index.response_synthesizers import ResponseMode
+
+from common.config import index_dir
 from common.llm import create_llm
-from common.prompt import CH_QUERY_PROMPT
+from common.prompt import CH_QUERY_PROMPT, CH_TREE_SUMMARIZE_PROMPT
 from common.utils import find_typed
-from query.query_engine import create_response_synthesizer, load_index
 
 service_context = ServiceContext.from_defaults(llm=create_llm())
 titles = ["北京市", "上海市"]
 summaries = []
 indices = []
 for city in titles:
-    city_indices = load_index(city, service_context)
+    storage_context = StorageContext.from_defaults(persist_dir=os.path.join(index_dir, city))
+    city_indices = load_indices_from_storage(
+        storage_context=storage_context,
+        service_context=service_context,
+    )
     summary = f"""
         此内容包含关于{city}的维基百科文章。
         如果您需要查找有关{city}的具体事实，请使用此索引。"
@@ -24,7 +32,11 @@ graph = ComposableGraph.from_indices(
     indices,
     summaries)
 query_engine = graph.as_query_engine(
-    response_synthesizer=create_response_synthesizer(service_context=service_context),
+    response_synthesizer=get_response_synthesizer(
+        response_mode=ResponseMode.TREE_SUMMARIZE,
+        summary_template=CH_TREE_SUMMARIZE_PROMPT,
+        service_context=service_context,
+    ),
     service_context=service_context,
     query_template=CH_QUERY_PROMPT,
 )

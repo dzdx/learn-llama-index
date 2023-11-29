@@ -7,8 +7,7 @@ from llama_index.text_splitter import SentenceSplitter
 from build.download import download
 from common.config import data_dir, index_dir
 from common.llm import create_llm
-from common.prompt import CH_SUMMARY_PROMPT, CH_INSERT_PROMPT
-from query.retrievers import MultiRetriever
+from common.prompt import CH_SUMMARY_PROMPT
 
 titles = ["北京市", "上海市"]
 for title in titles:
