@@ -15,4 +15,4 @@ if OPENAI_API_KEY:
 data_dir = os.path.join(ROOT_PATH, 'data')
 index_dir = os.path.join(ROOT_PATH, 'index')
 
-ROUTE_TODO = False
+ROUTE_TODO = True
