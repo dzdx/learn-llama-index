@@ -21,7 +21,7 @@ QA_DATASET_DIR = os.path.join(ROOT_PATH, "qa_dataset")
 
 FORCE_REBUILD_DATASET = False
 
-TEST_CITIES = ["上海市"]
+TEST_CITIES = ["北京市"]
 
 
 class Evaluator:
