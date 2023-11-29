@@ -7,7 +7,7 @@ from llama_index.indices.tree.base import TreeRetrieverMode
 
 from common.config import index_dir
 from common.llm import create_llm
-from query.retrievers import MultiRetriever
+from import_route import MultiRetriever
 
 title = "北京市"
 storage_context = StorageContext.from_defaults(persist_dir=os.path.join(index_dir, title))

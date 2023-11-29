@@ -4,7 +4,7 @@ from llama_index import SimpleDirectoryReader, VectorStoreIndex, TreeIndex, Stor
 from llama_index.node_parser import SimpleNodeParser
 from llama_index.text_splitter import SentenceSplitter
 
-from build.download import download
+from import_route import download
 from common.config import data_dir, index_dir
 from common.llm import create_llm
 from common.prompt import CH_SUMMARY_PROMPT

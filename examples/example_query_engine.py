@@ -10,7 +10,7 @@ from llama_index.response_synthesizers import ResponseMode
 from common.config import index_dir
 from common.llm import create_llm
 from common.prompt import CH_CHOICE_SELECT_PROMPT, CH_TREE_SUMMARIZE_PROMPT
-from query.retrievers import MultiRetriever
+from import_route import MultiRetriever
 
 title = "北京市"
 storage_context = StorageContext.from_defaults(persist_dir=os.path.join(index_dir, title))
