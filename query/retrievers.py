@@ -27,6 +27,7 @@ class MultiRetriever(BaseRetriever):
         if self._retrievers is None:
             return []
         # TODO
+        # self.retrievers 包含了多个子 index 的 retriever， MultiRetriever 对多路retrieve的结果取并集，以node.node_id 作为key
         raise NotImplementedError
 
 

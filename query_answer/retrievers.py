@@ -12,12 +12,7 @@ class MultiRetriever(BaseRetriever):
     def __init__(
             self,
             retrievers,
-            mode: str = "OR",
     ) -> None:
-        """Init params."""
-        if mode not in ("AND", "OR"):
-            raise ValueError("Invalid mode.")
-        self._mode = mode
         if retrievers is None:
             raise ValueError("Invalid retrievers.")
         self._retrievers = retrievers
@@ -41,18 +36,13 @@ class MultiRetriever(BaseRetriever):
             node_ids.append(cur_ids_set)
             combined_dict.update(cur_nodes_dict)
             retriever_names.append(cur_name)
-        if self._mode == "AND":
-            retrieve_ids = batch_option(node_ids, "intersection")
-        else:
-            retrieve_ids = batch_option(node_ids, "union")
+        retrieve_ids = batch_option(node_ids)
         retrieve_ids = sorted(retrieve_ids)
         retrieve_nodes = [combined_dict[rid] for rid in retrieve_ids]
         return retrieve_nodes
 
 
-def batch_option(list_with_set, option_type):
-    if option_type not in ("union", "intersection"):
-        raise ValueError("Invalid option_type.")
+def batch_option(list_with_set):
     size = len(list_with_set)
     if size == 0:
         return None
@@ -61,10 +51,7 @@ def batch_option(list_with_set, option_type):
         return res
 
     for cur_set in list_with_set:
-        if option_type == "union":
-            res = res.union(cur_set)
-        else:
-            res = res.intersection(cur_set)
+        res = res.union(cur_set)
     return res
 
 

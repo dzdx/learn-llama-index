@@ -22,4 +22,6 @@ def create_compose_query_engine(city_indices: Dict[str, List[BaseIndex]],
             summary=summary
         ))
     # TODO
+    # 创建一个 ComposableGraphQueryEngine, 组合多个城市的 query_engine
+    # https://docs.llamaindex.ai/en/stable/module_guides/indexing/composability.html#querying-the-graph
     raise NotImplementedError

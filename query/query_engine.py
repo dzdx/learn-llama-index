@@ -33,6 +33,7 @@ def load_indices(service_context: ServiceContext) -> Dict[str, List[BaseIndex]]:
 
 def create_response_synthesizer(service_context: ServiceContext = None) -> BaseSynthesizer:
     # TODO
+    # https://docs.llamaindex.ai/en/stable/module_guides/querying/response_synthesizers/root.html#get-started
     raise NotImplementedError
 
 

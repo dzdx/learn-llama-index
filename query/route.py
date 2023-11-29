@@ -55,6 +55,8 @@ def create_route_query_engine(query_engines: List[BaseQueryEngine], descriptions
                               service_context: ServiceContext = None):
     assert len(query_engines) == len(descriptions)
     # TODO
+    # 根据传入的多个query_engines和descriptions创建 RouteQueryEngine，实现query engine 的路由
+    # https://docs.llamaindex.ai/en/stable/module_guides/querying/router/root.html#using-as-a-query-engine
     raise NotImplementedError
 
 
@@ -84,8 +86,8 @@ class Chatter:
         index_summary = f"提供 {', '.join(self.city_indices.keys())} 这几个城市的相关信息"
         llm_query_engine = LlmQueryEngine(llm=self.llm, callback_manager=self.cb_manager)
         llm_summary = f"提供其他所有信息"
+        # 实现意图识别，把不同的query路由到不同的query_engine上
         raise NotImplementedError
-
 
     def _print_and_flush_debug_info(self):
         if self.debug_handler:
