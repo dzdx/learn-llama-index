@@ -5,3 +5,4 @@ index
 .llm_cache
 qa_dataset
 .DS_Store
+__pycache__
