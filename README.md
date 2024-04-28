@@ -30,7 +30,7 @@ export OPENAI_API_KEY=xxxx
 
 ## 补全 TODO
 
-### 下载文档并进行解析
+### 1. 下载 wiki 并进行解析
 
 `pytest test.py::test_build_nodes`
 
@@ -47,7 +47,7 @@ def build_nodes(data_file: str) -> List[BaseNode]:
     return service_context.node_parser.get_nodes_from_documents(documents)
 ```
 
-### 构建单个城市的召回索引
+### 2. 构建单个城市的召回索引
 
 `pytest test.py::test_build_index`
 
@@ -74,7 +74,7 @@ def build_index(index_file: str, data_file: str):
     storage_context.persist(persist_dir=index_file)
 ```
 
-### 构建三个城市的召回索引
+### 3. 构建三个城市的召回索引
 
 `pytest test.py::test_build_all_index`
 
@@ -89,7 +89,7 @@ def build_all():
 
 ```
 
-### 总结生成答案
+### 4. 总结生成答案
 
 `pytest test.py::test_response_synthesizer`
 
@@ -105,7 +105,7 @@ def create_response_synthesizer(service_context: ServiceContext = None) -> BaseS
 
 ```
 
-### 创建召回器
+### 5. 创建召回器
 
 `pytest test.py::test_retriever`
 
@@ -129,7 +129,7 @@ class DocumentQueryEngineFactory:
 
 ```
 
-### 创建单个文档的查询引擎
+### 6. 创建单个文档的查询引擎
 
 `pytest test.py::test_query_engine`
 
@@ -151,7 +151,7 @@ class DocumentQueryEngineFactory:
         )
 ```
 
-### 创建组合查询引擎
+### 7. 创建组合查询引擎
 
 `pytest test.py::test_compose_query_engine`
 
@@ -187,7 +187,7 @@ def create_compose_query_engine(city_indices: Dict[str, List[BaseIndex]],
 
 ```
 
-### 简单的路由分发
+### 9. 简单的路由分发
 
 `pytest test.py::test_simple_route`
 
@@ -212,7 +212,7 @@ def create_route_query_engine(query_engines: List[BaseQueryEngine], descriptions
 
 ```
 
-### 意图识别
+### 10. 意图识别
 
 `pytest test.py::test_route_query_engine`
 
@@ -234,4 +234,11 @@ class Chatter:
         return route_query_engine
 
 
+```
+
+
+# 完整运行项目
+```bash
+python main.py
+Enter a query:北京气候如何
 ```
