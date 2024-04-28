@@ -6,7 +6,7 @@
 主要用来演示如何用 llama index做一个简单的 RAG 应用
 
 `query_todo` 和 `build_todo` 中的 TODO 为需要编写代码的部分，需要跑通 test.py 中所有的测试用例，也可以参考 `query`
-和 `build` 两个模块代码的视线
+和 `build` 两个模块代码的实现
 
 ## 运行准备
 
